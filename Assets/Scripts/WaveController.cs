@@ -20,7 +20,7 @@ public class WaveController : MonoBehaviour {
     public float waveDirectionVariance = 45;
     
     [System.Serializable]
-    public struct waveAttributes
+    public struct WaveAttributes
     {
         public float amplitude;
         public float wavelength;
@@ -29,10 +29,20 @@ public class WaveController : MonoBehaviour {
         public float steepness;
         public Transform direction;
         //need direction variance fear each wave that stays same
+        public WaveAttributes(float _a, float _w, float _s)
+        {
+            amplitude = _a;
+            wavelength = _w;
+            speed = _s;
+            steepness = 0.5f;
+            direction = null;
+        }
     }
 
     [SerializeField]
-    public waveAttributes[] waves;
+    private WaveAttributes[] waves = new WaveAttributes[1]{
+        new WaveAttributes(0.02f,0.1f,0.05f)
+    };
 
     int numberOfWaves;// { get { return waves.Length; } }
 
@@ -51,6 +61,7 @@ public class WaveController : MonoBehaviour {
 
         for (int i = 0; i < 10; ++i)
         {
+            if (waves.Length <= i) return;
             if (waves[i].amplitude <= 0) continue;
 
             numberOfWaves++;
@@ -92,7 +103,7 @@ public class WaveController : MonoBehaviour {
 
     // Use this for initialization
     void OnEnable () {
-        waves = new waveAttributes[10];
+        //waves = new WaveAttributes[10];
         
         meshDrawer = GetComponent<MeshDrawer>();
         waveMaterial = meshDrawer.distortMaterial;

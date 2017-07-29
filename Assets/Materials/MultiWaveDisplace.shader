@@ -4,7 +4,7 @@
 	{
 		_Color("", Color) = (1,1,1,1)
 		_MainTex("Color", 2D) = "white" {}
-		_OffsetScale("Offset Scale",Range(0,10)) = 1
+		_SeaScale("Sea Scale",Range(0,10)) = 1
 		_Smoothing("Smoothing",Range(0,1)) = 0.5 //in case we want to recalc. normals
 		_Glossiness("Glossiness",Range(0,1)) = 0.5
 		_Metallic("Metallic",Range(0,1)) = 0.5
@@ -20,7 +20,7 @@
 		SubShader
 	{
 		Tags{ "RenderType" = "Opaque" }
-		//Cull Off
+		Cull Off
 
 		CGPROGRAM
 
@@ -31,6 +31,7 @@
 
 	struct Input { 
 		float2 uv_MainTex : TEXCOORD0;
+		float3 worldPos;
 		float dummy; 
 	};
 
@@ -44,6 +45,7 @@
 	float _Smoothing; //in case we want to calculate normals and smooth them
 
 	float3 _DisplaceTarget;
+	float _SeaScale;
 
 	float _A[10]; //amplitude
 	float _L[10]; //wavelength
@@ -77,7 +79,7 @@
 
 	void vert(inout appdata_full v)
 	{	
-		float3 vert = v.vertex.xyz;//mul(unity_ObjectToWorld, v.vertex);
+		float3 vert = v.vertex.xyz*_SeaScale;//mul(unity_ObjectToWorld, v.vertex);
 		float3 norm = 0;
 
 		for (int j = 0; j < _i; j++){
@@ -119,6 +121,8 @@
 
 	void surf(Input IN, inout SurfaceOutputStandard o)
 	{
+		float2 uv = IN.uv_MainTex + float2(_Time.y,_Time.y);
+		_Color.rgb = lerp(_Color.rgb,1,saturate(pow(IN.worldPos.y*10,1)));
 		o.Albedo = tex2D(_MainTex, IN.uv_MainTex).rgb*_Color.rgb;
 		o.Metallic = _Metallic;
 		o.Smoothness = _Glossiness;
