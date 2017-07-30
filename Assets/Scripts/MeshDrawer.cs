@@ -20,6 +20,14 @@ public class MeshDrawer : MonoBehaviour
         }
     }
 
+    Matrix4x4 transformMatrix
+    {
+        get
+        {
+            return Matrix4x4.TRS(transform.position, transform.rotation, transform.localScale);
+        }
+    }
+
     // Use this for initialization
     void Start()
     {
@@ -35,6 +43,6 @@ public class MeshDrawer : MonoBehaviour
 
         //Shader.SetGlobalVector("_DisplaceTarget", transform.InverseTransformPoint(distortTargetPos));
 
-        Graphics.DrawMesh(meshToDraw, transform.position, transform.rotation, distortMaterial, 0);
+        Graphics.DrawMesh(meshToDraw, transformMatrix, distortMaterial, 0);
     }
 }

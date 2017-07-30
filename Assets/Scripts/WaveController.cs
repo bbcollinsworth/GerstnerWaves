@@ -59,6 +59,8 @@ public class WaveController : MonoBehaviour {
     {
         numberOfWaves = 0;
 
+        SteepnessCheck();
+
         for (int i = 0; i < 10; ++i)
         {
             if (waves.Length <= i) return;
@@ -71,6 +73,24 @@ public class WaveController : MonoBehaviour {
             S[i] = waves[i].speed;
             Q[i] = waves[i].steepness;
             D[i] = GetWaveDirection(waves[i].direction);
+        }
+    }
+
+    void SteepnessCheck()
+    {
+        //limit total steepness to 0-1 range
+        var totalQ = 0.0f;
+        for (int i = 0; i < waves.Length; ++i)
+        {
+            totalQ += waves[i].steepness;
+        }
+
+        if (totalQ > 1)
+        {
+            for (int i = 0; i < waves.Length; ++i)
+            {
+                waves[i].steepness /= totalQ;
+            }
         }
     }
 

@@ -4,7 +4,11 @@
 	{
 		_Color("", Color) = (1,1,1,1)
 		_MainTex("Color", 2D) = "white" {}
+		_UVTex("UV Map", 2D) = "white" {}
+		_Cube ("Reflection Cubemap", CUBE) = "" {}
+		_ScrollSpeed("Scroll Speed",Range(-1,1)) = 0.1
 		_SeaScale("Sea Scale",Range(0,10)) = 1
+		_HeightRange("Height Range",Range(0.1,10)) = 1
 		_Smoothing("Smoothing",Range(0,1)) = 0.5 //in case we want to recalc. normals
 		_Glossiness("Glossiness",Range(0,1)) = 0.5
 		_Metallic("Metallic",Range(0,1)) = 0.5
@@ -20,7 +24,7 @@
 		SubShader
 	{
 		Tags{ "RenderType" = "Opaque" }
-		Cull Off
+		//Cull Off
 
 		CGPROGRAM
 
@@ -31,8 +35,10 @@
 
 	struct Input { 
 		float2 uv_MainTex : TEXCOORD0;
+		float2 uv_UVTex;
 		float3 worldPos;
-		float dummy; 
+		float3 worldRefl;
+        INTERNAL_DATA
 	};
 
 	half _Glossiness;
@@ -40,12 +46,16 @@
 	fixed4 _Color;
 
 	sampler2D _MainTex;
+	sampler2D _UVTex;
+	samplerCUBE _Cube;
 
 	float _OffsetScale = 1;
+	float _ScrollSpeed;
 	float _Smoothing; //in case we want to calculate normals and smooth them
 
 	float3 _DisplaceTarget;
 	float _SeaScale;
+	float _HeightRange;
 
 	float _A[10]; //amplitude
 	float _L[10]; //wavelength
@@ -79,7 +89,7 @@
 
 	void vert(inout appdata_full v)
 	{	
-		float3 vert = v.vertex.xyz*_SeaScale;//mul(unity_ObjectToWorld, v.vertex);
+		float3 vert = mul(unity_ObjectToWorld, v.vertex).xyz;//v.vertex.xyz*_SeaScale;//
 		float3 norm = 0;
 
 		for (int j = 0; j < _i; j++){
@@ -121,12 +131,18 @@
 
 	void surf(Input IN, inout SurfaceOutputStandard o)
 	{
-		float2 uv = IN.uv_MainTex + float2(_Time.y,_Time.y);
-		_Color.rgb = lerp(_Color.rgb,1,saturate(pow(IN.worldPos.y*10,1)));
-		o.Albedo = tex2D(_MainTex, IN.uv_MainTex).rgb*_Color.rgb;
-		o.Metallic = _Metallic;
-		o.Smoothness = _Glossiness;
-		float colVal = saturate((1 - tex2D(_MainTex, IN.uv_MainTex).b) * 10); //make blue alpha .. but wrong blue for now
+		float2 scroll = float2(_Time.y,_Time.y)*_ScrollSpeed;
+		float2 uv = IN.uv_MainTex + scroll;
+		float3 tex = tex2D(_MainTex, uv).r;
+		
+		float heightAdj = lerp(0.2,1,saturate(pow(IN.worldPos.y*_HeightRange,1)));
+		tex *= heightAdj;
+		o.Albedo = tex +_Color.rgb;
+		o.Normal = UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll)); 
+		o.Metallic = _Metallic*tex;
+		o.Smoothness = _Glossiness*tex;
+		o.Emission = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, WorldReflectionVector (IN, o.Normal)).rgb*0.1;
+		//float colVal = saturate((1 - tex2D(_MainTex, IN.uv_MainTex).b) * 10); //make blue alpha .. but wrong blue for now
 		o.Alpha = 1;
 	}
 
