@@ -9,7 +9,7 @@
 		_ScrollSpeed("Scroll Speed",Range(-1,1)) = 0.1
 		_SeaScale("Sea Scale",Range(0,10)) = 1
 		_HeightRange("Height Range",Range(0.1,10)) = 1
-		_Smoothing("Smoothing",Range(0,1)) = 0.5 //in case we want to recalc. normals
+		_Smoothing("Smoothing",Range(0,4)) = 0.5 //in case we want to recalc. normals
 		_Glossiness("Glossiness",Range(0,1)) = 0.5
 		_Metallic("Metallic",Range(0,1)) = 0.5
 		/*
@@ -24,7 +24,7 @@
 		SubShader
 	{
 		Tags{ "RenderType" = "Opaque" }
-		//Cull Off
+		Cull Off
 
 		CGPROGRAM
 
@@ -90,7 +90,7 @@
 	void vert(inout appdata_full v)
 	{	
 		float3 vert = mul(unity_ObjectToWorld, v.vertex).xyz;//v.vertex.xyz*_SeaScale;//
-		float3 norm = 0;
+		float3 norm = v.normal.xyz;//mul(unity_ObjectToWorld, v.normal).xyz;
 
 		for (int j = 0; j < _i; j++){
 
@@ -135,7 +135,7 @@
 		float2 uv = IN.uv_MainTex + scroll;
 		float3 tex = tex2D(_MainTex, uv).r;
 		
-		float heightAdj = lerp(0.2,1,saturate(pow(IN.worldPos.y*_HeightRange,1)));
+		float heightAdj = lerp(0.2,1,saturate(IN.worldPos.y+_HeightRange)/pow(_HeightRange,_Smoothing));
 		tex *= heightAdj;
 		o.Albedo = tex +_Color.rgb;
 		o.Normal = UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll)); 

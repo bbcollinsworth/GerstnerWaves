@@ -18,6 +18,7 @@ public class WaveController : MonoBehaviour {
 
     [Range(0,1)]
     public float waveDirectionVariance = 45;
+    public bool limitSteepness = false;
     
     [System.Serializable]
     public struct WaveAttributes
@@ -59,7 +60,8 @@ public class WaveController : MonoBehaviour {
     {
         numberOfWaves = 0;
 
-        SteepnessCheck();
+        if (limitSteepness)
+            SteepnessCheck();
 
         for (int i = 0; i < 10; ++i)
         {
