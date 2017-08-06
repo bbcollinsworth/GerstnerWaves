@@ -138,7 +138,7 @@
 		float heightAdj = lerp(0.2,1,saturate(IN.worldPos.y+_HeightRange)/pow(_HeightRange,_Smoothing));
 		tex *= heightAdj;
 		o.Albedo = tex +_Color.rgb;
-		o.Normal = UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll)); 
+		o.Normal = saturate(UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll))*0.5 + (1.2-heightAdj)*float3(0,0,1.5)); 
 		o.Metallic = _Metallic*tex;
 		o.Smoothness = _Glossiness*tex;
 		o.Emission = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, WorldReflectionVector (IN, o.Normal)).rgb*0.1;
