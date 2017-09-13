@@ -28,7 +28,7 @@
 
 		CGPROGRAM
 
-#pragma surface surf Standard vertex:vert nolightmap  addshadow alpha:fade 
+#pragma surface surf Standard vertex:vert fullforwardshadows 
 #pragma target 3.0
 
 //#include "Common.cginc"

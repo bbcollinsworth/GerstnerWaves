@@ -4,7 +4,9 @@
 	{
 		_Color("", Color) = (1,1,1,1)
 		_MainTex("Color", 2D) = "white" {}
-		_OffsetScale("Offset Scale",Range(0,10)) = 1
+		_Glossiness ("Smoothness", Range(0,1)) = 0.5
+		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_OffsetScale("RippleFade",Range(0,10)) = 1
 		_Smoothing("Smoothing",Range(0,1)) = 0.5 //in case we want to recalc. normals
 	
 		A ("Amplitude", Float) = 0.5 //amplitude
@@ -18,18 +20,22 @@
 		SubShader
 	{
 		Tags{ "RenderType" = "Opaque" }
-		Cull Off
+		//Cull Off
 
 		CGPROGRAM
 
-#pragma surface surf Standard vertex:vert nolightmap  addshadow alpha:fade 
-#pragma target 3.0
+//#pragma surface surf Standard vertex:vert nolightmap  addshadow alpha:fade 
+// Physically based Standard lighting model, and enable shadows on all light types
+	#pragma surface surf Standard vertex:vert fullforwardshadows
+	#pragma target 3.0
 
 //#include "Common.cginc"
 
 	struct Input { 
 		float2 uv_MainTex : TEXCOORD0;
-		float dummy; 
+		float3 worldPos;
+		float3 worldRefl;
+		//float dummy; 
 	};
 
 	half _Glossiness;
@@ -74,7 +80,7 @@
 
 	float3 gerstnerWave(float3 pos){
 		w = freq(L);
-		D = normalize(D);
+		//D = normalize(D);
 		float ampCalc = QA(w);
 		float waveCalc = gInner(pos);
 		pos.x += ampCalc * D.x * cos(waveCalc);
@@ -99,7 +105,16 @@
 
 	void vert(inout appdata_full v)
 	{	
-		float3 wsVertex = v.vertex.xyz;//mul(unity_ObjectToWorld, v.vertex);
+		float3 wsVertex = mul(unity_ObjectToWorld, v.vertex).xyz;
+		
+		//for ripples from point:
+		D = D - wsVertex.xz;// - D;
+		//ripple fade out
+		A *= saturate(1*_OffsetScale-length(D))+0.00001;
+
+		//Swap in this for waves
+		//D = normalize(D);
+
 		wsVertex = gerstnerWave(wsVertex);
 
 		//get a vector to the target, and the magnitude
@@ -112,14 +127,17 @@
 		//wsVertex += normalize(vecToTarget) / lenToTarget *_OffsetScale;
 
 		v.vertex.xyz = wsVertex;
-		v.normal.xyz = waveNormal(wsVertex);
+		//v.vertex = mul(unity_ObjectToWorld, v.vertex);
+		v.normal.xyz += waveNormal(wsVertex);
 	}
 
 	void surf(Input IN, inout SurfaceOutputStandard o)
 	{
 		o.Albedo = tex2D(_MainTex, IN.uv_MainTex).rgb * _Color.rgb;
-		o.Metallic = 0;// _Metallic;
-		o.Smoothness = 0;// _Glossiness;
+		o.Metallic = _Metallic;
+		o.Smoothness = _Glossiness;
+		o.Emission = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, WorldReflectionVector (IN, o.Normal));
+
 		float colVal = saturate((1 - tex2D(_MainTex, IN.uv_MainTex).b) * 10); //make blue alpha .. but wrong blue for now
 		o.Alpha = 1;
 	}
