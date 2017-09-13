@@ -5,7 +5,7 @@
 		_Color("", Color) = (1,1,1,1)
 		_MainTex("Color", 2D) = "white" {}
 		_UVTex("UV Map", 2D) = "white" {}
-		_Cube ("Reflection Cubemap", CUBE) = "" {}
+		//_Cube ("Reflection Cubemap", CUBE) = "" {}
 		_ScrollSpeed("Scroll Speed",Range(-1,1)) = 0.1
 		_SeaScale("Sea Scale",Range(0,10)) = 1
 		_HeightRange("Height Range",Range(0.1,10)) = 1
@@ -47,7 +47,7 @@
 
 	sampler2D _MainTex;
 	sampler2D _UVTex;
-	samplerCUBE _Cube;
+	//samplerCUBE _Cube;
 
 	float _OffsetScale = 1;
 	float _ScrollSpeed;
@@ -135,10 +135,11 @@
 		float2 uv = IN.uv_MainTex + scroll;
 		float3 tex = tex2D(_MainTex, uv).r;
 		
-		float heightAdj = lerp(0.2,1,saturate(IN.worldPos.y+_HeightRange)/pow(_HeightRange,_Smoothing));
+		float heightAdj = lerp(0.4,1,saturate(IN.worldPos.y+_HeightRange)/pow(_HeightRange,_Smoothing));
 		tex *= heightAdj;
 		o.Albedo = tex +_Color.rgb;
-		o.Normal = saturate(UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll))*0.5 + (1.2-heightAdj)*float3(0,0,1.5)); 
+		o.Normal = UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll))*0.3;
+		//o.Normal = saturate(UnpackNormal (tex2D (_UVTex, IN.uv_UVTex+scroll))*0.5 + (1.2-heightAdj)*float3(0,0,1.5)); 
 		o.Metallic = _Metallic*tex;
 		o.Smoothness = _Glossiness*tex;
 		o.Emission = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, WorldReflectionVector (IN, o.Normal)).rgb*0.1;
